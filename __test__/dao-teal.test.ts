@@ -8,7 +8,7 @@ let appClient: DaoTealClient;
 
 describe('DaoTeal', () => {
   beforeEach(fixture.beforeEach);
-
+  const proposal = 'This is a proposal.';
   beforeAll(async () => {
     await fixture.beforeEach();
     const { algod, testAccount } = fixture.context;
@@ -22,20 +22,24 @@ describe('DaoTeal', () => {
       algod
     );
 
-    await appClient.create.createApplication({});
+    await appClient.create.createApplication({ proposal });
   });
 
-  test('sum', async () => {
-    const a = 13;
-    const b = 37;
-    const sum = await appClient.doMath({ a, b, operation: 'sum' });
-    expect(sum.return?.valueOf()).toBe(BigInt(a + b));
+  test('getProposal', async () => {
+    const proposalFromMethod = await appClient.getProposal({});
+    console.log(proposalFromMethod.return?.valueOf());
+    expect(proposalFromMethod.return?.valueOf()).toBe(proposal);
   });
 
-  test('difference', async () => {
-    const a = 13;
-    const b = 37;
-    const diff = await appClient.doMath({ a, b, operation: 'difference' });
-    expect(diff.return?.valueOf()).toBe(BigInt(a >= b ? a - b : b - a));
+  test('vote & get vote', async () => {
+    await appClient.vote({ inFavor: true });
+
+    const votesAfter = await appClient.getVotes({});
+    expect(votesAfter.return?.valueOf()).toEqual([BigInt(1), BigInt(1)]);
+
+    await appClient.vote({ inFavor: false });
+
+    const votesAfter2 = await appClient.getVotes({});
+    expect(votesAfter2.return?.valueOf()).toEqual([BigInt(1), BigInt(2)]);
   });
 });
